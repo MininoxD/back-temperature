@@ -12,7 +12,7 @@ app.use(express.json());
 /* server socket io */
 const httpServer = createServer(app);
 const io = new Server(httpServer, { cors: {
-    origin: "https://frontend-temperature.vercel.app/",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"]
 }});
 
