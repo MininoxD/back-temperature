@@ -19,6 +19,16 @@ export interface CurrentWeather{
     updatedAt: Date
 }
 
+export interface CurrentWeatherIot{
+    humidity: number
+    temperatureF: number
+    temperatureC: number
+    hotIndexF: number
+    hotIndexC: number
+    isAutomatic: boolean
+    statusRele: boolean
+}
+
 export interface CustomRequest<T> extends Request {
     body: T
 }

@@ -3,7 +3,7 @@ import { createServer } from "http";
 import { Server, Socket } from "socket.io";
 import { createWeather, currentWeather, getAllWheater, getCurrentWeather, getLastWeather } from './controllers/wheater';
 import './database/conecction'
-import { CurrentWeather, CustomRequest, Weather } from './interface';
+import { CurrentWeather, CurrentWeatherIot, CustomRequest, Weather } from './interface';
 /* port */
 const port:number = 5000
 /* server express */
@@ -49,14 +49,9 @@ app.get('/last-wheater', async(req, res) => {
         res.send(lastWeather)
     }
 })
-/* start socket server */
-io.on("connection", (socket) => {
-    console.log("a user connected socket io",socket.id);
 
-    /* Event consts */
-    socket.on('client-a:current-wheater', async(data:Omit<CurrentWeather,'_id' | 'createdAt' | 'updatedAt'>) => {
-        /* console.log("Data",data); */
-        const lastWeather = await getLastWeather()
+const saveCurentWeather = async(data: Pick<CurrentWeather,'humidity' | 'temperatureF'>)=>{
+    const lastWeather = await getLastWeather()
         if(lastWeather){
             const {createdAt} = lastWeather
             console.log("Date create",createdAt)
@@ -69,9 +64,18 @@ io.on("connection", (socket) => {
                 const wheaterCurrent = await createWeather({humidity: data.humidity, temperature: data.temperatureF})
             }
         }else{
-            const wheaterCurrent = await createWeather({humidity: data.humidity, temperature: data.temperatureC})
+            const wheaterCurrent = await createWeather({humidity: data.humidity, temperature: data.temperatureF})
         }
+}
+/* start socket server */
+io.on("connection", (socket) => {
+    console.log("a user connected socket io",socket.id);
+
+    /* Event consts */
+    socket.on('client-a:current-wheater', async(data:CurrentWeatherIot) => {
+        /* console.log("Data",data); */
         io.emit('server:current-wheater', data)
+        saveCurentWeather(data)
     })
 
     /* Ui Events */
