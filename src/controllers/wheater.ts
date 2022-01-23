@@ -23,3 +23,11 @@ export const currentWeather = async(data: Omit<CurrentWeather,'_id' | 'createdAt
 export const getCurrentWeather = async()=>{
     return await CurrentWeatherModel.find();
 }
+
+export const getLastWeather = async():Promise<Weather|null>=>{
+    const lastWeather =  await WeatherModel.find().sort({createdAt: -1}).limit(1)
+    if(lastWeather.length !== 0){
+        return lastWeather[0]
+    }
+    return null
+}

@@ -1,7 +1,7 @@
 import express from 'express'
 import { createServer } from "http";
 import { Server, Socket } from "socket.io";
-import { createWeather, currentWeather, getAllWheater, getCurrentWeather } from './controllers/wheater';
+import { createWeather, currentWeather, getAllWheater, getCurrentWeather, getLastWeather } from './controllers/wheater';
 import './database/conecction'
 import { CurrentWeather, CustomRequest, Weather } from './interface';
 /* port */
@@ -32,20 +32,70 @@ app.post('/current-wheater', async(req:CustomRequest<Omit<CurrentWeather,'_id' |
 app.get('/current-wheater', async(req, res) => {
     res.send(await getCurrentWeather())
 })
+
+app.get('/last-wheater', async(req, res) => {
+    const lastWeather = await getLastWeather()
+    if(lastWeather){
+        const {createdAt} = lastWeather
+        console.log("Date create",createdAt)
+        let horaA = new Date();
+        console.log("Date now", horaA);
+        var transcurso =  horaA.getTime()- createdAt.getTime() ;
+        console.log("Tiempo transcurrido", transcurso);
+        if( transcurso > 1.8e+6){
+         console.log("ya paso media hora");
+        }
+        
+        res.send(lastWeather)
+    }
+})
 /* start socket server */
 io.on("connection", (socket) => {
     console.log("a user connected socket io",socket.id);
 
-    io.emit('server:current-wheater', "hello world")
-    socket.on('client:current-wheater', (data:Omit<CurrentWeather,'_id' | 'createdAt' | 'updatedAt'>) => {
-        console.log("Data",data);
+    /* Event consts */
+    socket.on('client-a:current-wheater', async(data:Omit<CurrentWeather,'_id' | 'createdAt' | 'updatedAt'>) => {
+        /* console.log("Data",data); */
+        const lastWeather = await getLastWeather()
+        if(lastWeather){
+            const {createdAt} = lastWeather
+            console.log("Date create",createdAt)
+            let horaA = new Date();
+            console.log("Date now", horaA);
+            var transcurso =  horaA.getTime()- createdAt.getTime() ;
+            console.log("Tiempo transcurrido", transcurso);
+            if( transcurso > /* 1.8e+6 */300000){
+                console.log("ya paso 5 minutos");
+                const wheaterCurrent = await createWeather({humidity: data.humidity, temperature: data.temperatureF})
+            }
+        }else{
+            const wheaterCurrent = await createWeather({humidity: data.humidity, temperature: data.temperatureC})
+        }
         io.emit('server:current-wheater', data)
     })
+
+    /* Ui Events */
+    socket.on('client:click-switch-mode', () => {
+        console.log("click switch mode");
+        io.emit('server:send-switch-mode',{"status":"swtch"})
+    })
+
+    socket.on('client:click-switch-rele', () => {
+        console.log("click switch rele");
+        io.emit('server:send-switch-rele',{"status":"swtch"})
+    })
+
+    socket.on('client-a:current-status', (data:{isAutomatic:boolean, statusRele:boolean}) => {
+        console.log("accion arduino", data);
+        io.emit('server:current-staus', data)
+    })
+        
+    socket.on("disconnect", (reason) => {
+        console.log(`disconnect ${socket.id} due to ${reason}`);
+    });
 });
 
-io.on("error", (err) => {
-    console.log(err);
-})
+
   
 /* express server */
 httpServer.listen(port)
