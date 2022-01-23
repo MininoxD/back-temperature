@@ -11,10 +11,10 @@ const app = express()
 app.use(express.json());
 /* server socket io */
 const httpServer = createServer(app);
-const io = new Server(httpServer, { cors: {
-    origin: "http://localhost:3000",
-    methods: ["GET", "POST"]
-}});
+const io = new Server(httpServer, { allowRequest: (req, callback) => {
+    const noOriginHeader = req.headers.origin === undefined;
+    callback(null, noOriginHeader);
+  }});
 
 app.get('/wheaters', async(req, res) => {
     res.send(await getAllWheater())
