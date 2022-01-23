@@ -11,7 +11,10 @@ const app = express()
 app.use(express.json());
 /* server socket io */
 const httpServer = createServer(app);
-const io = new Server(httpServer, { /* options */ });
+const io = new Server(httpServer, { cors: {
+    origin: "http://localhost:3000",
+    methods: ["GET", "POST"]
+}});
 
 app.get('/wheaters', async(req, res) => {
     res.send(await getAllWheater())
