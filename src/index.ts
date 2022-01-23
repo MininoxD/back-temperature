@@ -11,10 +11,10 @@ const app = express()
 app.use(express.json());
 /* server socket io */
 const httpServer = createServer(app);
-const io = new Server(httpServer, { allowRequest: (req, callback) => {
-    const noOriginHeader = req.headers.origin === undefined;
-    callback(null, noOriginHeader);
-  }});
+const io = new Server(httpServer, { cors: {
+    origin: "https://frontend-temperature.vercel.app/",
+    methods: ["GET", "POST"]
+}});
 
 app.get('/wheaters', async(req, res) => {
     res.send(await getAllWheater())
